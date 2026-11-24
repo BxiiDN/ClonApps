@@ -5,11 +5,12 @@
 # (pm create-user --managed, dpm set-profile-owner). ClonApps sendiri TIDAK memakai jalur ini;
 # di perangkat nyata ClonApps memakai layar provisioning Android dengan persetujuan pengguna.
 #
-# Argumen: <berkas-laporan> <folder-split-apk-fixture> <apk-clonapps>
+# Argumen: <berkas-laporan> <fixture.apks> <apk-clonapps> <bundletool.jar>
 set -uo pipefail
 OUT=${1:-emulator-report.txt}
-SPLITS=${2:?folder split APK fixture}
+FIXTURE_APKS=${2:?berkas .apks fixture}
 CLONAPPS_APK=${3:?APK ClonApps}
+BUNDLETOOL=${4:?bundletool.jar}
 FIX=com.clonapps.fixture
 PASS=0; FAIL=0
 : > "$OUT"
@@ -31,10 +32,8 @@ log "== ClonApps emulator test =="
 log "model=$(sh_ getprop ro.product.model) sdk=$(sh_ getprop ro.build.version.sdk) abi=$(sh_ getprop ro.product.cpu.abilist)"
 log "feature managed_users: $(sh_ pm list features | grep -c managed_users)"
 
-# 1) Fixture dipasang sebagai split APK
-APKS=$(find "$SPLITS" -name '*.apk' | sort)
-log "split APK: $(echo "$APKS" | xargs -n1 basename | tr '\n' ' ')"
-if adb install-multiple -r $APKS >>"$OUT" 2>&1; then ok "install-multiple split APK"; else bad "install-multiple split APK"; fi
+# 1) Fixture dipasang sebagai split APK yang dipilih bundletool untuk spesifikasi perangkat ini
+if java -jar "$BUNDLETOOL" install-apks --apks="$FIXTURE_APKS" >>"$OUT" 2>&1; then ok "bundletool install-apks (split APK)"; else bad "bundletool install-apks"; fi
 NPATH=$(sh_ pm path $FIX | grep -c package:)
 [ "$NPATH" -ge 2 ] && ok "fixture terpasang dengan $NPATH file APK (base + split)" || bad "fixture tidak memiliki split ($NPATH file)"
 
@@ -62,7 +61,7 @@ sh_ pm list packages --user 0 | grep -q "package:$FIX$" && ok "aplikasi asli tet
 sh_ pm list packages --user "$PID" | grep -q "package:$FIX$" && bad "salinan profil masih ada" || ok "salinan profil terhapus"
 launch_fixture 0
 AGAIN=$(instance_for 0)
-[ "$AGAIN" = "$MAIN" ] && ok "data aplikasi asli utuh (instance sama)" || bad "data aplikasi asli berubah ($AGAIN vs $MAIN)"
+[ -n "$MAIN" ] && [ "$AGAIN" = "$MAIN" ] && ok "data aplikasi asli utuh (instance sama)" || bad "data aplikasi asli berubah ($AGAIN vs $MAIN)"
 
 # 4) Smoke test ClonApps di profil utama dan di profil kerja (sebagai profile owner uji)
 adb install -r "$CLONAPPS_APK" >>"$OUT" 2>&1 && ok "ClonApps terpasang" || bad "ClonApps gagal dipasang"
