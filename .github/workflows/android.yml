@@ -155,7 +155,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
             ./gradlew --stacktrace :app:connectedDebugAndroidTest
-            bash scripts/emulator-profile-test.sh emulator-report.txt "$(ls inputs/dist/ClonAppsFixture-split-*.apks | head -1)" "$(ls inputs/dist/ClonApps-v*.apk | head -1)" bundletool.jar
+            bash scripts/emulator-profile-test.sh emulator-report.txt "$(find inputs -name 'ClonAppsFixture-split-*.apks' | head -1)" "$(find inputs -name 'ClonApps-v*.apk' | head -1)" bundletool.jar
       - name: Unggah hasil emulator
         if: always()
         uses: actions/upload-artifact@v4
