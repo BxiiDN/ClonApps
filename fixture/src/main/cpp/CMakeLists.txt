@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(fixture_native C)
+add_library(fixture_native SHARED fixture_native.c)
+find_library(log-lib log)
+target_link_libraries(fixture_native ${log-lib})

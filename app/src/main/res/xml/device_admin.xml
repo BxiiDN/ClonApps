@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ClonApps tidak meminta kebijakan device admin klasik. Kemampuan profile owner berasal dari provisioning. -->
+<device-admin>
+    <uses-policies />
+</device-admin>
