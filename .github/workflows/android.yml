@@ -32,6 +32,9 @@ jobs:
           java-version: "17"
 
       - uses: android-actions/setup-android@v3
+        with:
+          # Paket default "tools" sudah tidak ada di SDK manager terbaru.
+          packages: platform-tools
 
       # setup-gradle memvalidasi checksum gradle-wrapper.jar terhadap rilis resmi Gradle.
       - uses: gradle/actions/setup-gradle@v4
@@ -122,6 +125,9 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          # Paket default "tools" sudah tidak ada di SDK manager terbaru.
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
       - uses: actions/download-artifact@v4
         with:
