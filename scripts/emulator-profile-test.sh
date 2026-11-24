@@ -22,10 +22,21 @@ sh_() { adb shell "$@" | tr -d '\r'; }
 instance_for() { # $1 = user id
   adb logcat -d -s ClonAppsFixture 2>/dev/null | tr -d '\r' | grep "user=UserHandle{$1} " | tail -1 | sed -n 's/.*instance=\([0-9a-f-]*\).*/\1/p'
 }
-launch_fixture() { # $1 = user id
+launch_fixture() { # $1 = user id. Proses dihentikan dulu agar onCreate menulis log baru.
+  sh_ am force-stop --user "$1" $FIX >/dev/null 2>&1
   adb logcat -c
   sh_ am start --user "$1" -W -n $FIX/.FixtureActivity >/dev/null
   sleep 4
+}
+read_instance() { # $1 = user id; coba hingga 3 kali
+  local v=""
+  for _ in 1 2 3; do
+    launch_fixture "$1"
+    v=$(instance_for "$1")
+    [ -n "$v" ] && break
+    sleep 3
+  done
+  echo "$v"
 }
 
 log "== ClonApps emulator test =="
@@ -37,8 +48,7 @@ if java -jar "$BUNDLETOOL" install-apks --apks="$FIXTURE_APKS" >>"$OUT" 2>&1; th
 NPATH=$(sh_ pm path $FIX | grep -c package:)
 [ "$NPATH" -ge 2 ] && ok "fixture terpasang dengan $NPATH file APK (base + split)" || bad "fixture tidak memiliki split ($NPATH file)"
 
-launch_fixture 0
-MAIN=$(instance_for 0)
+MAIN=$(read_instance 0)
 [ -n "$MAIN" ] && ok "instance profil utama: $MAIN" || bad "instance profil utama tidak terbaca"
 adb logcat -d -s ClonAppsFixture | tr -d '\r' | grep -q "native=native OK" && ok "native library dimuat di profil utama" || bad "native library tidak dimuat"
 
@@ -49,8 +59,7 @@ ok "profil kerja uji dibuat: user $PID"
 sh_ am start-user "$PID" >/dev/null; sleep 8
 
 if sh_ pm install-existing --user "$PID" $FIX | grep -qi "installed"; then ok "fixture tersedia di profil kerja (install-existing)"; else bad "install-existing fixture"; fi
-launch_fixture "$PID"
-PROF=$(instance_for "$PID")
+PROF=$(read_instance "$PID")
 [ -n "$PROF" ] && ok "instance profil kerja: $PROF" || bad "instance profil kerja tidak terbaca"
 if [ -n "$MAIN" ] && [ -n "$PROF" ] && [ "$MAIN" != "$PROF" ]; then ok "data terpisah: instance berbeda antarprofil"; else bad "data TIDAK terbukti terpisah"; fi
 adb logcat -d -s ClonAppsFixture | tr -d '\r' | grep -q "native=native OK" && ok "native library dimuat di profil kerja" || bad "native library di profil kerja"
@@ -59,8 +68,7 @@ adb logcat -d -s ClonAppsFixture | tr -d '\r' | grep -q "native=native OK" && ok
 sh_ pm uninstall --user "$PID" $FIX >>"$OUT"
 sh_ pm list packages --user 0 | grep -q "package:$FIX$" && ok "aplikasi asli tetap terpasang setelah salinan profil dihapus" || bad "aplikasi asli ikut terhapus"
 sh_ pm list packages --user "$PID" | grep -q "package:$FIX$" && bad "salinan profil masih ada" || ok "salinan profil terhapus"
-launch_fixture 0
-AGAIN=$(instance_for 0)
+AGAIN=$(read_instance 0)
 [ -n "$MAIN" ] && [ "$AGAIN" = "$MAIN" ] && ok "data aplikasi asli utuh (instance sama)" || bad "data aplikasi asli berubah ($AGAIN vs $MAIN)"
 
 # 4) Smoke test ClonApps di profil utama dan di profil kerja (sebagai profile owner uji)
