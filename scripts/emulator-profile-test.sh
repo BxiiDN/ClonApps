@@ -66,9 +66,15 @@ adb logcat -d -s ClonAppsFixture | tr -d '\r' | grep -q "native=native OK" && ok
 
 # 3) Menghapus salinan di profil kerja tidak menghapus aplikasi asli/datanya
 sh_ pm uninstall --user "$PID" $FIX >>"$OUT"
-sh_ pm list packages --user 0 | grep -q "package:$FIX$" && ok "aplikasi asli tetap terpasang setelah salinan profil dihapus" || bad "aplikasi asli ikut terhapus"
+sleep 3
 sh_ pm list packages --user "$PID" | grep -q "package:$FIX$" && bad "salinan profil masih ada" || ok "salinan profil terhapus"
 AGAIN=$(read_instance 0)
+present=no
+for _ in 1 2 3; do
+  if sh_ pm path --user 0 $FIX | grep -q "package:"; then present=yes; break; fi
+  sleep 3
+done
+[ "$present" = yes ] && ok "aplikasi asli tetap terpasang setelah salinan profil dihapus" || bad "aplikasi asli ikut terhapus"
 [ -n "$MAIN" ] && [ "$AGAIN" = "$MAIN" ] && ok "data aplikasi asli utuh (instance sama)" || bad "data aplikasi asli berubah ($AGAIN vs $MAIN)"
 
 # 4) Smoke test ClonApps di profil utama dan di profil kerja (sebagai profile owner uji)
