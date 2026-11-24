@@ -35,7 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.clonapps.R
 import com.clonapps.domain.CloneCoordinator
@@ -69,14 +69,14 @@ interface RootActions {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClonAppsRoot(c: CloneCoordinator, actions: RootActions) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var destName by rememberSaveable { mutableStateOf(Dest.HOME.name) }
     val dest = Dest.valueOf(destName)
     var detailPkg by rememberSaveable { mutableStateOf<String?>(null) }
     val snackbar = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        c.messages.collect { m -> snackbar.showSnackbar(context.getString(m.res, *m.args.toTypedArray())) }
+        c.messages.collect { m -> snackbar.showSnackbar(resources.getString(m.res, *m.args.toTypedArray())) }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
