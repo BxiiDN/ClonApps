@@ -6,7 +6,8 @@ Aplikasi Android native (Kotlin + Jetpack Compose) untuk memilih aplikasi yang s
 menjalankan **salinannya dengan akun dan data terpisah**, memakai **profil kerja Android (Work Profile)**
 sebagai fondasi — tanpa root, tanpa API tersembunyi, tanpa mengubah package name atau menandatangani ulang APK.
 
-> **Status jujur:** kode lengkap dan unit test modul inti lulus. APK debug dibangun oleh GitHub Actions.
+> **Status jujur:** build, unit test, lint, test instrumentasi, dan uji isolasi profil kerja di emulator API 34
+> lulus di GitHub Actions. Alur instalasi clone end-to-end (dengan layar konfirmasi Android) belum diuji otomatis.
 > Belum ada pengujian di perangkat fisik (termasuk Xiaomi Pad 6) maupun pada aplikasi populer.
 > ClonApps **tidak** menjanjikan semua aplikasi berhasil. Lihat [docs/TESTING.md](docs/TESTING.md) dan
 > [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
