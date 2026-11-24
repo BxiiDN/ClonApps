@@ -52,10 +52,13 @@ jobs:
           set -euo pipefail
           # Rilis terbaru bundletool dari repo resmi google/bundletool.
           gh release download --repo google/bundletool --pattern 'bundletool-all-*.jar' --output bundletool.jar --clobber
+          # Keystore uji sekali pakai, hanya untuk fixture; tidak disimpan di repository.
+          keytool -genkeypair -keystore fixture-test.jks -storepass android -keypass android -alias fixture \
+            -keyalg RSA -keysize 2048 -validity 30 -dname "CN=ClonApps Fixture Test" -noprompt
           java -jar bundletool.jar build-apks --overwrite \
             --bundle=fixture/build/outputs/bundle/debug/fixture-debug.aab \
             --output=fixture-split.apks \
-            --ks="$HOME/.android/debug.keystore" --ks-pass=pass:android --ks-key-alias=androiddebugkey --key-pass=pass:android
+            --ks=fixture-test.jks --ks-pass=pass:android --ks-key-alias=fixture --key-pass=pass:android
           mkdir -p fixture-split && unzip -o -q fixture-split.apks -d fixture-split
           ls -R fixture-split | head -50
 
